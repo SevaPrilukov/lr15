@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="utf-8"/>
+    <title>Список билетов</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div th:replace="navigation :: navi('Home')"></div>
+<div style="margin-left: 50px;margin-right: 50px">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Пассажир</th>
+            <th>Рейс</th>
+            <th>Цена</th>
+            <th sec:authorize="isAuthenticated()">Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="ticket : ${tickets}">
+            <td th:text="${ticket.id}"/>
+            <td th:text="${ticket.getPassenger}"/>
+            <td th:text="${ticket.getRoute}"/>
+            <td th:text="${ticket.getPrice}"></td>
+            <td sec:authorize="isAuthenticated()">
+                <a th:href="@{'/tickets/show/' + ${ticket.id}}"  th:text="Просмотреть"/><br>
+                <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                   th:href="@{'/tickets/addOrUpdate/edit/' + ${ticket.id}}" th:text="Редактировать"
+                />
+                <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                   th:href="@{'/tickets/delete/' + ${ticket.id}}" th:text="Удалить" class="text-danger"
+                   style="margin-left: 15px"/>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation" th:if="${totalPages > 0}">
+        <ul class="pagination">
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <a class="page-link" th:href="@{${filterUrl}(page=${i})}" th:text="${i + 1}"></a>
+            </li>
+        </ul>
+    </nav>
+    <br>
+    <!--    <form th:action="@{/organizations/addOrUpdate/add}" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">-->
+    <!--        <button type="submit" class="btn btn-black">Добавить билет</button>-->
+    <!--    </form>-->
+    <h3 style="margin-top: 20px" class="text-center" >Фильтры</h3>
+    <form th:action="@{/tickets/filter}" method="get">
+        <div class="form-group">
+            <!--            <label for="name">Название организации:</label>-->
+            <input type="text" class="form-control" id="passenger" name="passenger" placeholder="ФИО пассажира" th:value="${passenger}">
+        </div>
+        <div class="form-group">
+            <!--            <label for="address">Адрес:</label>-->
+            <input type="text" class="form-control" id="route" name="route" placeholder="Рейс" th:value="${route}">
+        </div>
+        <div class="form-group">
+            <!--            <label for="openingtime">Работает в этот час:</label>-->
+            <input type="number" min="0"  step="1" class="form-control" id="price" name="price" placeholder="Стоимость в рублях" th:value="${price}">
+        </div>
+        <button class="btn btn-black" sec:authorize="isAnonymous()" disabled>Применить</button>
+        <button type="submit" class="btn btn-black" sec:authorize="isAuthenticated()">Применить</button>
+
+    </form>
+    <form th:action="@{/}">
+        <button style='margin-top: -70px; margin-left: 1073px' type="submit" class="btn btn-danger" sec:authorize="isAuthenticated()">Сброс</button>
+        <button style='margin-top: -70px; margin-left: 1073px' sec:authorize="isAnonymous()" disabled class="btn btn-danger">Сброс</button>
+    </form>
+    <br>
+<!--    <li >-->
+<!--        -->
+<!--    </li>-->
+
+    <h4 sec:authorize="isAnonymous()">Авторизуйтесь для просмотра</h4>
+
+    <h4 sec:authorize="isAuthenticated()">Маршруты на которые чаще всего покупают билеты :</h4>
+    <ul sec:authorize="isAuthenticated()" th:if="${mostCommonRoutes != null && mostCommonRoutes.size() > 0}"
+        style="list-style-type: none; padding: 0; margin: 0; margin-top: -34px; font-size: 20px">
+        <li style="margin-left: 615px"  th:each=" route : ${mostCommonRoutes}" th:text="'Рейс - ' + ${route}"></li>
+    </ul>
+</div>
+</body>
+</html>
